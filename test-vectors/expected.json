@@ -1,0 +1,1060 @@
+{
+  "schema": 1,
+  "cases": [
+    {
+      "name": "textbook",
+      "kind": "stream",
+      "file": "textbook.nmea",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "valid_fix_epochs": 1,
+      "must_pass": [
+        "checksums",
+        "line_length",
+        "epoch_match",
+        "epoch_order",
+        "gst",
+        "fix_validity"
+      ],
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "byte-by-byte",
+      "kind": "stream",
+      "file": "byte-by-byte.nmea",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "chunks": [
+        1
+      ],
+      "valid_fix_epochs": 1,
+      "must_pass": [
+        "framing",
+        "epoch_match"
+      ],
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "ble-mtu23",
+      "kind": "stream",
+      "file": "ble-mtu23.nmea",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "chunks": [
+        20,
+        1,
+        7,
+        13
+      ],
+      "valid_fix_epochs": 1,
+      "must_pass": [
+        "framing",
+        "epoch_match"
+      ],
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "bad-checksum",
+      "kind": "stream",
+      "file": "bad-checksum.nmea",
+      "names": [
+        "GPGST",
+        "GPRMC"
+      ],
+      "errors": [
+        "checksums"
+      ],
+      "must_fail": [
+        "checksums",
+        "mandatory_rmc_gga",
+        "epoch_match"
+      ],
+      "expected_must_failures": [
+        "checksums",
+        "epoch_match",
+        "epoch_rate",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "line-512",
+      "kind": "stream",
+      "file": "line-512.nmea",
+      "names": [
+        "PCGBO",
+        "GPGGA"
+      ],
+      "errors": [],
+      "must_pass": [
+        "checksums"
+      ],
+      "must_fail": [],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "line-513",
+      "kind": "stream",
+      "file": "line-513.nmea",
+      "names": [
+        "GPGGA"
+      ],
+      "errors": [
+        "line_length"
+      ],
+      "must_pass": [],
+      "must_fail": [
+        "line_length"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "line_length",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "rmc-void",
+      "kind": "stream",
+      "file": "rmc-void.nmea",
+      "names": [
+        "GPGGA",
+        "GPRMC"
+      ],
+      "valid_fix_epochs": 0,
+      "must_pass": [
+        "fix_validity"
+      ],
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "cached-valid-repeat",
+      "kind": "stream",
+      "file": "cached-valid-repeat.nmea",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC",
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "must_fail": [
+        "no_stale_repeats"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "no_stale_repeats"
+      ]
+    },
+    {
+      "name": "rmc-before-gga",
+      "kind": "stream",
+      "file": "rmc-before-gga.nmea",
+      "names": [
+        "GPRMC",
+        "GPGGA",
+        "GPGST"
+      ],
+      "valid_fix_epochs": 1,
+      "must_fail": [
+        "epoch_order"
+      ],
+      "must_pass": [
+        "epoch_match",
+        "fix_validity"
+      ],
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "stationary-fresh-epochs",
+      "kind": "stream",
+      "file": "stationary-fresh-epochs.nmea",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC",
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "valid_fix_epochs": 2,
+      "must_pass": [
+        "epoch_rate",
+        "no_stale_repeats",
+        "epoch_match"
+      ],
+      "expected_must_failures": []
+    },
+    {
+      "name": "slow-cached-delivery",
+      "kind": "stream",
+      "file": "slow-cached-delivery.nmea",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC",
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "arrival_ms": [
+        0,
+        0,
+        0,
+        4900,
+        4900,
+        4900
+      ],
+      "must_fail": [
+        "epoch_rate"
+      ],
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "timed-cutoff-mid-line",
+      "kind": "stream",
+      "file": "timed-cutoff-mid-line.nmea",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "eof": false,
+      "must_pass": [
+        "framing"
+      ],
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "epoch-mismatch",
+      "kind": "stream",
+      "file": "epoch-mismatch.nmea",
+      "names": [
+        "GPGGA",
+        "GPRMC"
+      ],
+      "must_fail": [
+        "epoch_match"
+      ],
+      "expected_must_failures": [
+        "epoch_match",
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "hello-unknown-field",
+      "kind": "stream",
+      "file": "hello-unknown-field.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "must_pass": [
+        "control_grammar",
+        "version",
+        "capabilities"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "unknown-long-key",
+      "kind": "stream",
+      "file": "unknown-long-key.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "device_accepted": true,
+      "must_pass": [
+        "control_grammar"
+      ],
+      "expected_must_failures": [
+        "control_direction",
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "unknown-list-duplicate",
+      "kind": "stream",
+      "file": "unknown-list-duplicate.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "must_fail": [
+        "control_grammar"
+      ],
+      "expected_must_failures": [
+        "control_grammar",
+        "epoch_rate",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "unknown-minor",
+      "kind": "stream",
+      "file": "unknown-minor.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "heartbeat_enabled": false,
+      "must_pass": [
+        "version",
+        "capabilities"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "accept-unknown-optional-cap",
+      "kind": "stream",
+      "file": "accept-unknown-optional-cap.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "device_accepted": true,
+      "heartbeat_enabled": true,
+      "must_pass": [
+        "version",
+        "capabilities"
+      ],
+      "expected_must_failures": [
+        "control_direction",
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "unknown-major",
+      "kind": "stream",
+      "file": "unknown-major.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "UNSUPPORTED_VERSION"
+      ],
+      "heartbeat_enabled": false,
+      "must_fail": [
+        "version"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga",
+        "version"
+      ]
+    },
+    {
+      "name": "duplicate-key",
+      "kind": "stream",
+      "file": "duplicate-key.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "must_fail": [
+        "control_grammar"
+      ],
+      "expected_must_failures": [
+        "control_grammar",
+        "epoch_rate",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "accept-unselected-minor",
+      "kind": "stream",
+      "file": "accept-unselected-minor.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "UNSUPPORTED_VERSION"
+      ],
+      "must_fail": [
+        "version"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga",
+        "version"
+      ]
+    },
+    {
+      "name": "accept-unadvertised",
+      "kind": "stream",
+      "file": "accept-unadvertised.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "UNSUPPORTED_CAPABILITY"
+      ],
+      "heartbeat_enabled": false,
+      "expected_must_failures": [
+        "control_direction",
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "reserved-write-cap",
+      "kind": "stream",
+      "file": "reserved-write-cap.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "heartbeat_enabled": false,
+      "must_fail": [
+        "capabilities"
+      ],
+      "expected_must_failures": [
+        "capabilities",
+        "epoch_rate",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "encoded-reserved-cap",
+      "kind": "stream",
+      "file": "encoded-reserved-cap.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "heartbeat_enabled": false,
+      "must_fail": [
+        "capabilities"
+      ],
+      "expected_must_failures": [
+        "capabilities",
+        "epoch_rate",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "encoded-unadvertised-cap",
+      "kind": "stream",
+      "file": "encoded-unadvertised-cap.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "UNSUPPORTED_CAPABILITY"
+      ],
+      "heartbeat_enabled": false,
+      "expected_must_failures": [
+        "control_direction",
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "no-hb-before-accept",
+      "kind": "stream",
+      "file": "no-hb-before-accept.nmea",
+      "names": [
+        "PCGBO",
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "heartbeat_enabled": false,
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "heartbeat-without-gnss",
+      "kind": "stream",
+      "file": "heartbeat-without-gnss.nmea",
+      "names": [
+        "PCGBO",
+        "PCGBO",
+        "PCGBO"
+      ],
+      "profile": "extended",
+      "accepted": true,
+      "must_fail": [
+        "mandatory_rmc_gga",
+        "fresh_epochs"
+      ],
+      "must_pass": [
+        "hb_timing",
+        "hb_identity"
+      ],
+      "arrival_ms": [
+        0,
+        1000,
+        2000
+      ],
+      "valid_fix_epochs": 0,
+      "expected_must_failures": [
+        "discovery_nonce",
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "heartbeat-fake-fix",
+      "kind": "stream",
+      "file": "heartbeat-fake-fix.nmea",
+      "names": [
+        "PCGBO",
+        "PCGBO"
+      ],
+      "profile": "extended",
+      "accepted": true,
+      "must_fail": [
+        "fix_validity",
+        "mandatory_rmc_gga"
+      ],
+      "expected_must_failures": [
+        "discovery_nonce",
+        "epoch_rate",
+        "fix_validity",
+        "fresh_epochs",
+        "hb_timing",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "discover",
+      "kind": "stream",
+      "file": "discover.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "discovery_reply": true,
+      "reply_codes": [],
+      "expected_must_failures": [
+        "control_direction",
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "discover-unknown-major",
+      "kind": "stream",
+      "file": "discover-unknown-major.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "discovery_reply": false,
+      "reply_codes": [
+        "UNSUPPORTED_VERSION"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga",
+        "version"
+      ]
+    },
+    {
+      "name": "supplemental-valid",
+      "kind": "stream",
+      "file": "supplemental-valid.nmea",
+      "names": [
+        "PCGBO",
+        "PCGBO",
+        "PCGBO"
+      ],
+      "must_pass": [
+        "field_values",
+        "control_grammar"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "battery-no-measurement",
+      "kind": "stream",
+      "file": "battery-no-measurement.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "must_fail": [
+        "field_values"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "field_values",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "bad-percent",
+      "kind": "stream",
+      "file": "bad-percent.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "must_fail": [
+        "field_values"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "field_values",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "raw-display-plus",
+      "kind": "stream",
+      "file": "raw-display-plus.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "must_fail": [
+        "field_values"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "field_values",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "bad-talker",
+      "kind": "stream",
+      "file": "bad-talker.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "must_fail": [
+        "field_values"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "field_values",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "bad-utf8",
+      "kind": "stream",
+      "file": "bad-utf8.nmea",
+      "names": [
+        "PCGBO"
+      ],
+      "reply_codes": [
+        "BAD_REQUEST"
+      ],
+      "must_fail": [
+        "field_values"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "field_values",
+        "fresh_epochs",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "imu-intermediate",
+      "kind": "stream",
+      "file": "imu-intermediate.nmea",
+      "names": [
+        "PCGBI"
+      ],
+      "must_fail": [
+        "imu"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "imu",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "imu-gyro-range",
+      "kind": "stream",
+      "file": "imu-gyro-range.nmea",
+      "names": [
+        "PCGBI"
+      ],
+      "must_fail": [
+        "imu"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "imu",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "imu-accel-range",
+      "kind": "stream",
+      "file": "imu-accel-range.nmea",
+      "names": [
+        "PCGBI"
+      ],
+      "must_fail": [
+        "imu"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "imu",
+        "link_activity",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "imu-rollover-reboot",
+      "kind": "imu",
+      "file": "imu-rollover-reboot.nmea",
+      "names": [
+        "PCGBI",
+        "PCGBI",
+        "PCGBI",
+        "PCGBI",
+        "PCGBI",
+        "PCGBI",
+        "PCGBI"
+      ],
+      "arrival_ms": [
+        0,
+        20,
+        21,
+        40,
+        60,
+        80,
+        2100
+      ],
+      "states": [
+        "boundary",
+        "step",
+        "duplicate",
+        "step",
+        "boundary",
+        "step",
+        "boundary"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "imu-full-form",
+      "kind": "stream",
+      "file": "imu-full-form.nmea",
+      "names": [
+        "PCGBI"
+      ],
+      "must_pass": [
+        "imu"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "ubx-dollar",
+      "kind": "stream",
+      "file": "ubx-dollar.bin",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "chunks": [
+        1,
+        7,
+        20
+      ],
+      "binary_frames": 1,
+      "errors": [],
+      "valid_fix_epochs": 1,
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "ubx-bad-checksum",
+      "kind": "stream",
+      "file": "ubx-bad-checksum.bin",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "chunks": [
+        1,
+        7,
+        20
+      ],
+      "binary_frames": 0,
+      "errors": [
+        "binary_frames"
+      ],
+      "valid_fix_epochs": 1,
+      "expected_must_failures": [
+        "binary_frames",
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "ubx-max4096",
+      "kind": "stream",
+      "file": "ubx-max4096.bin",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "chunks": [
+        1,
+        7,
+        20
+      ],
+      "binary_frames": 1,
+      "errors": [],
+      "valid_fix_epochs": 1,
+      "expected_must_failures": [
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "ubx-over4096",
+      "kind": "stream",
+      "file": "ubx-over4096.bin",
+      "names": [
+        "GPGGA",
+        "GPGST",
+        "GPRMC"
+      ],
+      "chunks": [
+        1,
+        7,
+        20
+      ],
+      "binary_frames": 0,
+      "errors": [
+        "binary_frames"
+      ],
+      "valid_fix_epochs": 1,
+      "expected_must_failures": [
+        "binary_frames",
+        "epoch_rate"
+      ]
+    },
+    {
+      "name": "bare-lf",
+      "kind": "stream",
+      "file": "bare-lf.nmea",
+      "names": [
+        "GPRMC"
+      ],
+      "errors": [
+        "framing"
+      ],
+      "must_fail": [
+        "framing"
+      ],
+      "expected_must_failures": [
+        "epoch_match",
+        "epoch_rate",
+        "framing",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
+      "name": "udp-duplicate-reorder-foreign",
+      "kind": "udp",
+      "file": "udp-replay.json",
+      "peer": [
+        "127.0.0.1",
+        49762
+      ],
+      "session": "0123456789abcdef",
+      "boot": "00000001",
+      "outcomes": [
+        [
+          true,
+          "accepted"
+        ],
+        [
+          false,
+          "duplicate_or_old"
+        ],
+        [
+          false,
+          "duplicate_or_old"
+        ],
+        [
+          false,
+          "foreign_session"
+        ],
+        [
+          false,
+          "foreign_sender"
+        ],
+        [
+          false,
+          "foreign_boot"
+        ],
+        [
+          false,
+          "stale"
+        ],
+        [
+          true,
+          "accepted"
+        ]
+      ]
+    },
+    {
+      "name": "udp-sequence-rollover",
+      "kind": "udp",
+      "file": "udp-rollover.json",
+      "peer": [
+        "127.0.0.1",
+        49762
+      ],
+      "session": "0123456789abcdef",
+      "boot": "00000001",
+      "outcomes": [
+        [
+          true,
+          "accepted"
+        ],
+        [
+          true,
+          "accepted"
+        ]
+      ]
+    },
+    {
+      "name": "udp-limits-and-lease",
+      "kind": "udp",
+      "file": "udp-limits-lease.json",
+      "peer": [
+        "127.0.0.1",
+        49762
+      ],
+      "session": "0123456789abcdef",
+      "boot": "00000001",
+      "outcomes": [
+        [
+          false,
+          "checksums"
+        ],
+        [
+          false,
+          "non_nmea_payload"
+        ],
+        [
+          false,
+          "datagram_length"
+        ],
+        [
+          false,
+          "datagram_length"
+        ],
+        [
+          false,
+          "lease_expired"
+        ],
+        [
+          true,
+          "accepted"
+        ]
+      ]
+    }
+  ]
+}

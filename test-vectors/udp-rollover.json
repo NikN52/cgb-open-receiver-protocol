@@ -1,0 +1,16 @@
+[
+  {
+    "packet": "udp-rollover-last.nmea",
+    "peer": [
+      "127.0.0.1",
+      49762
+    ]
+  },
+  {
+    "packet": "udp-rollover-zero.nmea",
+    "peer": [
+      "127.0.0.1",
+      49762
+    ]
+  }
+]

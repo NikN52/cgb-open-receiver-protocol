@@ -1,0 +1,2 @@
+$PCGBO,HELLO,pv=1.0,id=demo01,boot=00000001,caps=nmea*00
+$PCGBO,HB,boot=00000001,seq=0,ms=1000,fix=1*66

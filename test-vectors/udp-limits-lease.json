@@ -1,0 +1,47 @@
+[
+  {
+    "packet": "udp-bad-checksum.nmea",
+    "peer": [
+      "127.0.0.1",
+      49762
+    ]
+  },
+  {
+    "packet": "udp-proprietary-payload.nmea",
+    "peer": [
+      "127.0.0.1",
+      49762
+    ]
+  },
+  {
+    "packet": "udp-oversized.nmea",
+    "peer": [
+      "127.0.0.1",
+      49762
+    ]
+  },
+  {
+    "packet": "udp-partial-line.nmea",
+    "peer": [
+      "127.0.0.1",
+      49762
+    ]
+  },
+  {
+    "packet": "udp-seq10.nmea",
+    "peer": [
+      "127.0.0.1",
+      49762
+    ],
+    "now": 10.0
+  },
+  {
+    "packet": "udp-seq10.nmea",
+    "peer": [
+      "127.0.0.1",
+      12345
+    ],
+    "now": 11.0,
+    "renew_at": 5.0
+  }
+]
