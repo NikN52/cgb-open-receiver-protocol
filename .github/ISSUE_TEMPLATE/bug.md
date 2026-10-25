@@ -15,7 +15,7 @@ assignees: ""
 - Spec revision/commit:
 - Device firmware revision:
 - Bridge/app version (if relevant):
-- Transport and topology:
+- Transport and topology (TCP 28495, discovery UDP 28496, push UDP 28497, SPP/BLE):
 - OS/tool version:
 
 ## Воспроизведение / Reproduction

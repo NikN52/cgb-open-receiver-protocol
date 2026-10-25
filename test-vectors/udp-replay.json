@@ -3,56 +3,56 @@
     "packet": "udp-seq10.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-seq10.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-seq9.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-foreign-session.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-seq11.nmea",
     "peer": [
       "127.0.0.2",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-foreign-boot.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-stale.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-seq11.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   }
 ]

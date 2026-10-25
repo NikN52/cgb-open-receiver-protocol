@@ -19,9 +19,9 @@
 
 ## Быстрый старт: работает сейчас
 
-1. Подключите любой одноантенный NMEA-приёмник к RX-only UART платы ESP32 (или аналогичной UART–Wi-Fi платы) и выберите совпадающую скорость `9600`, `38400` либо `115200` бод. Двухантенный приёмник не требуется. Плата подключается как Wi-Fi STA к hotspot телефона или головного устройства, то есть оказывается в одной локальной сети с мостом. Устройство должно слушать TCP `49761` и передавать checksum-valid NMEA с `GGA` и `RMC`; рекомендуется `GGA → GST → RMC`, 5 Гц.
+1. Подключите любой одноантенный NMEA-приёмник к RX-only UART платы ESP32 (или аналогичной UART–Wi-Fi платы) и выберите совпадающую скорость `9600`, `38400` либо `115200` бод. Двухантенный приёмник не требуется. Плата подключается как Wi-Fi STA к hotspot телефона или мультимедиа автомобиля, то есть оказывается в одной локальной сети с мостом. Устройство должно слушать TCP `28495` и передавать checksum-valid NMEA с `GGA` и `RMC`; рекомендуется `GGA → GST → RMC`, 5 Гц.
 2. В Car GNSS Bridge 0.27.90 откройте «Настройки» → «Приёмник» → «Приёмники…» → «Сеть TCP».
-3. Укажите IP устройства и порт `49761`. Для этого режима HELLO, discovery и ACCEPT не нужны.
+3. Укажите IP устройства и порт `28495`. Для этого режима HELLO, discovery и ACCEPT не нужны.
 4. Проверьте продвигающийся UTC, Fix, число спутников, высоту и отсутствие повторов сохранённой точки. При отсутствии решения должны идти RMC `V` и GGA quality `0`.
 5. Если соединения нет, проверьте, что hotspot не изолирует клиентов, IP относится к выбранной локальной сети, а трафик не уходит через cellular/VPN.
 
@@ -66,7 +66,7 @@ python tools/simulator.py --host 127.0.0.1 --duration 40
 python tools/check_device.py 127.0.0.1 --seconds 30 --profile extended
 ```
 
-Если `49761` недоступен на тестовом ПК, задайте одинаковый альтернативный `--port`, например `49161`, в обеих командах. Это меняет только локальный тест; нормативный порт устройства остаётся `49761`.
+Если `28495` недоступен на тестовом ПК, задайте одинаковый выбранный свободный локальный порт через `--port` в обеих командах. Это меняет только локальный тест; нормативный порт устройства остаётся `28495`.
 
 Перед прошивкой замените placeholder credentials локально и не публикуйте Wi-Fi пароль, MAC, VIN, серийный номер или личные идентификаторы. Не подключайте 5-вольтовый UART к 3,3-вольтовому входу.
 
@@ -104,9 +104,9 @@ A software check or example build proves only laboratory code behavior. It does 
 
 ## Quick start: available now
 
-1. Connect any single-antenna NMEA receiver to the RX-only UART of an ESP32 (or a similar UART-to-Wi-Fi board) and select the matching `9600`, `38400`, or `115200` baud rate. No dual-antenna receiver is required. Join the board as a Wi-Fi station to either the phone hotspot or the head-unit hotspot, placing it on the same local network as the bridge. The device listens on TCP `49761` and sends checksum-valid NMEA with `GGA` and `RMC`; `GGA → GST → RMC` at 5 Hz is recommended.
+1. Connect any single-antenna NMEA receiver to the RX-only UART of an ESP32 (or a similar UART-to-Wi-Fi board) and select the matching `9600`, `38400`, or `115200` baud rate. No dual-antenna receiver is required. Join the board as a Wi-Fi station to either the phone hotspot or the head-unit hotspot, placing it on the same local network as the bridge. The device listens on TCP `28495` and sends checksum-valid NMEA with `GGA` and `RMC`; `GGA → GST → RMC` at 5 Hz is recommended.
 2. In Car GNSS Bridge 0.27.90, open Settings → Receiver → Receivers… → TCP Network.
-3. Enter the device IP and port `49761`. This mode does not require HELLO, discovery, or ACCEPT.
+3. Enter the device IP and port `28495`. This mode does not require HELLO, discovery, or ACCEPT.
 4. Verify advancing UTC, Fix, satellite count, altitude, and no replay of a stored position. No solution must be represented by RMC `V` and GGA quality `0`.
 5. If it does not connect, check hotspot client isolation, confirm that the IP belongs to the selected local network, and make sure the route cannot escape over cellular/VPN.
 
@@ -151,7 +151,7 @@ python tools/simulator.py --host 127.0.0.1 --duration 40
 python tools/check_device.py 127.0.0.1 --seconds 30 --profile extended
 ```
 
-If `49761` is unavailable on the test PC, pass the same alternate `--port`, for example `49161`, to both commands. This changes only the local test; the normative device port remains `49761`.
+If `28495` is unavailable on the test PC, pass the same selected free local port through `--port` to both commands. This changes only the local test; the normative device port remains `28495`.
 
 Replace placeholder credentials locally before flashing. Do not publish a Wi-Fi password, MAC, VIN, serial number, or personal identifier. Never connect a 5 V UART output to a 3.3 V-only input.
 

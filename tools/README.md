@@ -22,10 +22,11 @@ loop is generated about the standard NMEA textbook point, not from a real
 track. GNSS UTC advances from the current PC UTC. One HELLO is sent on each
 connection. NMEA flows before ACCEPT; only a valid ACCEPT enables 1 Hz HB.
 Use `--nmea-only` to disable HELLO, ACCEPT and HB for a legacy client. Discovery
-uses UDP 49762, unicast replies and the request's nonce.
+uses UDP 28496, unicast replies and the request's nonce.
 
-On a PC where TCP 49761 is reserved or already used, pass `--port 49161` to
-both simulator and checker. The device's normative default remains 49761.
+On a PC where TCP 28495 is reserved or already used, select a free local port
+and pass it through `--port` to both simulator and checker. The device's
+normative default remains 28495.
 OFFER advertises the port actually selected by the simulator.
 
 For a receiver on a real local Wi-Fi/AP network, replace the placeholders:

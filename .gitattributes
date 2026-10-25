@@ -5,5 +5,5 @@
 *.h text eol=lf
 *.ini text eol=lf
 *.json text eol=lf
-*.nmea -text
+*.nmea -text whitespace=cr-at-eol
 *.bin -text

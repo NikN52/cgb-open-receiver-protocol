@@ -10,7 +10,8 @@ assignees: ""
 
 - Плата/приёмник, версия hardware / board/receiver and hardware revision:
 - Прошивка и commit/tag / firmware and commit/tag:
-- Транспорт / transport: TCP 49761 / UDP push / SPP / BLE NUS
+- Транспорт / transport: TCP 28495 / UDP push 28497 / SPP / BLE NUS
+- Поиск/подписка UDP 28496 (если используется) / discovery/subscription (if used):
 - Топология / topology: phone hotspot / head-unit hotspot / other local network
 - Объявленные capabilities / advertised capabilities:
 - Настроечный псевдоним `id` (обезличенный, не MAC/VIN/serial):

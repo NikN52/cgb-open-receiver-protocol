@@ -30,13 +30,15 @@ The protocol defines no cloud relay and does not permit an automatic fallback to
 
 | Purpose | Port / profile | Direction | 1.0 status |
 |---|---:|---|---|
-| Primary stream | `49761/TCP` | bridge → device connection; data in both directions only as defined below | mandatory baseline transport |
-| Discovery and subscription | `49762/UDP` | broadcast request or unicast request to a known selected IP; unicast response and `SUBSCRIBE` | defined |
-| UDP push | `49763/UDP` | device → bridge | optional, `udp_push` capability |
+| Primary stream | `28495/TCP` | bridge → device connection; data in both directions only as defined below | mandatory baseline transport |
+| Discovery and subscription | `28496/UDP` | broadcast request or unicast request to a known selected IP; unicast response and `SUBSCRIBE` | defined |
+| UDP push | `28497/UDP` | device → bridge | optional, `udp_push` capability |
 | Bluetooth Classic | SPP UUID `00001101-0000-1000-8000-00805F9B34FB` | bidirectional byte stream | optional |
 | Bluetooth LE | Nordic UART Service `6E400001-B5A3-F393-E0A9-E50E24DCCA9E` | stream over the characteristics below | optional |
 | BLE TX | `6E400003-B5A3-F393-E0A9-E50E24DCCA9E` | device → bridge, notify | required by the BLE profile |
 | BLE RX | `6E400002-B5A3-F393-E0A9-E50E24DCCA9E` | bridge → device, write | required by the BLE profile |
+
+A device MAY additionally offer conventional NMEA-0183 on TCP port `10110`; this profile uses TCP port `28495`.
 
 TCP segment, SPP packet, and BLE notification boundaries are not message boundaries. A receiver assembles the stream through `CR LF`; this applies even at the minimum BLE MTU.
 
@@ -277,11 +279,11 @@ TIME is diagnostic clock correlation only. Navigation UTC comes from GNSS RMC; T
 
 ### 11.1 DISCOVER / OFFER
 
-The bridge sends DISCOVER to `49762/UDP`: broadcast on each explicitly selected eligible local interface, or unicast to a known selected IP. The device replies by unicast to the source IP and source port:
+The bridge sends DISCOVER to `28496/UDP`: broadcast on each explicitly selected eligible local interface, or unicast to a known selected IP. The device replies by unicast to the source IP and source port:
 
 ```text
 $PCGBO,DISCOVER,pv=1,nonce=0123456789abcdef*3E
-$PCGBO,OFFER,pv=1.0,nonce=0123456789abcdef,id=demo01,tcp=49761,name=DIY-GNSS,caps=nmea*4F
+$PCGBO,OFFER,pv=1.0,nonce=0123456789abcdef,id=demo01,tcp=28495,name=DIY-GNSS,caps=nmea*40
 ```
 
 | Type | Required fields | Optional fields |
@@ -293,13 +295,13 @@ The device address comes from the received OFFER source IP and is not carried in
 
 ### 11.2 SUBSCRIBE
 
-When `udp_push` is negotiated, the bridge sends this unicast message to device port `49762/UDP`:
+When `udp_push` is negotiated, the bridge sends this unicast message to device port `28496/UDP`:
 
 ```text
-$PCGBO,SUBSCRIBE,pv=1.0,session=0123456789abcdef,port=49763,lease=10*35
+$PCGBO,SUBSCRIBE,pv=1.0,session=0123456789abcdef,port=28497,lease=10*3A
 ```
 
-All fields are required: `pv=1.0`, random `session`, `port=49763`, and `lease=10` seconds. The bridge renews the lease every 5 seconds. The device stops push when the lease expires. `SUBSCRIBE` does not allow reverse commands and cannot redirect traffic to another IP: the device sends only to the request source IP.
+All fields are required: `pv=1.0`, random `session`, `port=28497`, and `lease=10` seconds. The bridge renews the lease every 5 seconds. The device stops push when the lease expires. `SUBSCRIBE` does not allow reverse commands and cannot redirect traffic to another IP: the device sends only to the request source IP.
 
 ### 11.3 DATA
 
@@ -334,7 +336,7 @@ The complete datagram is at most **1200 bytes**. Source IP, `session`, and `boot
 
 This specification defines a wire protocol; it does not promise every extension in a particular build.
 
-**Available now:** Car GNSS Bridge 0.27.90 accepts ordinary NMEA TCP through the existing “TCP Network” receiver: Settings → Receiver → Receivers… → TCP Network, then enter the device IP and port `49761`. ORP discovery, HELLO/ACCEPT, and extensions are not required in this mode.
+**Available now:** Car GNSS Bridge 0.27.90 accepts ordinary NMEA TCP through the existing “TCP Network” receiver: Settings → Receiver → Receivers… → TCP Network, then enter the device IP and port `28495`. ORP discovery, HELLO/ACCEPT, and extensions are not required in this mode.
 
 **DRAFT / soon:** a dedicated “Open Protocol” receiver and negotiated extensions are under discussion. An implementation must consume PCGBO as control data, keep separate indicators for “channel alive,” “GNSS epoch received,” and “new Fix received,” and never treat HB or STATUS as navigation freshness. IMU, WHEEL, and BATT remain separate sensor/diagnostic data until their application is validated independently.
 
@@ -343,7 +345,7 @@ This specification defines a wire protocol; it does not promise every extension 
 A minimal board:
 
 1. joins a configured Wi-Fi STA network;
-2. listens for at most two TCP clients on `49761`;
+2. listens for at most two TCP clients on `28495`;
 3. sends each client HELLO with `caps=nmea` and supports ACCEPT/HB;
 4. reads UART in the receive direction only, assembles a whole NMEA epoch, verifies XOR, and queues whole epochs in a bounded queue;
 5. drops the oldest whole epochs, not individual lines, on overflow;

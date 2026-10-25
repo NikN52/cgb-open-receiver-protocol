@@ -3,35 +3,35 @@
     "packet": "udp-bad-checksum.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-proprietary-payload.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-oversized.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-partial-line.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ]
   },
   {
     "packet": "udp-seq10.nmea",
     "peer": [
       "127.0.0.1",
-      49762
+      28496
     ],
     "now": 10.0
   },

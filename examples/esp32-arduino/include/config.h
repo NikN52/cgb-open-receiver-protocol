@@ -43,6 +43,14 @@
 #define OPENRX_GNSS_RX_PIN 16
 #endif
 
+// Normative ORP ports. Override locally only when the deployment requires it.
+#ifndef OPENRX_TCP_PORT
+#define OPENRX_TCP_PORT 28495
+#endif
+#ifndef OPENRX_DISCOVERY_PORT
+#define OPENRX_DISCOVERY_PORT 28496
+#endif
+
 // Disabling HELLO also disables ACCEPT parsing and heartbeat output, leaving a
 // pure NMEA-only TCP stream.
 #ifndef OPENRX_ENABLE_PROTOCOL_HELLO

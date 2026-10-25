@@ -9,7 +9,7 @@ not inferred by the parser under test.
 import json
 from pathlib import Path
 
-from protocol import checksum, control, sentence
+from protocol import DISCOVERY_PORT, TCP_PORT, checksum, control, sentence
 
 
 def main():
@@ -101,9 +101,13 @@ def main():
         arrival_ms=[0, 1000, 2000], valid_fix_epochs=0)
     stream("heartbeat-fake-fix", hello + control("HB", boot="00000001", seq=0, ms=1000, fix=1),
            ["PCGBO"] * 2, profile="extended", accepted=True, must_fail=["fix_validity", "mandatory_rmc_gga"])
-    for name, major in (("discover", 1), ("discover-unknown-major", 2)):
-        stream(name, control("DISCOVER", pv=major, nonce="0123456789abcdef"), ["PCGBO"],
-               discovery_reply=major == 1, reply_codes=["UNSUPPORTED_VERSION"] if major != 1 else [])
+    nonce = "0123456789abcdef"
+    offer = control("OFFER", pv="1.0", nonce=nonce, id="demo01", tcp=TCP_PORT,
+                    caps="nmea", name="Synthetic-GNSS")
+    stream("discover", control("DISCOVER", pv=1, nonce=nonce), ["PCGBO"],
+           discovery_reply=True, offer_file=put("discover-offer.nmea", offer))
+    stream("discover-unknown-major", control("DISCOVER", pv=2, nonce=nonce), ["PCGBO"],
+           discovery_reply=False, reply_codes=["UNSUPPORTED_VERSION"])
     stream("supplemental-valid", control("WHEEL", ms=1000, v_mps="4.20", dir="fwd", sigma_mps="0.10") + control(
         "BATT", ms=1000, mv=4080, pct="78.5", charging=0) + control(
         "TIME", ms=1000, utc_ms=1735689600000, sigma_ms=20, src="gnss"), ["PCGBO"] * 3,
@@ -145,7 +149,7 @@ def main():
         cases.append(dict(name=name, kind="stream", file=put(name + ".bin", packet + epoch), names=names,
                           chunks=[1, 7, 20], binary_frames=count, errors=errors, valid_fix_epochs=1))
     stream("bare-lf", gga.replace(b"\r\n", b"\n") + rmc, ["GPRMC"], errors=["framing"], must_fail=["framing"])
-    peer, session, boot = ["127.0.0.1", 49762], "0123456789abcdef", "00000001"
+    peer, session, boot = ["127.0.0.1", DISCOVERY_PORT], "0123456789abcdef", "00000001"
 
     def push(name, seq, **kwargs):
         fields = dict(session=session, boot=boot, seq=seq, ms=1000, age_ms=10)
@@ -156,7 +160,7 @@ def main():
     foreign = push("udp-foreign-session", 12, session="fedcba9876543210")
     oldboot, stale = push("udp-foreign-boot", 12, boot="00000002"), push("udp-stale", 12, age_ms=1001)
     events = [dict(packet=p10, peer=peer), dict(packet=p10, peer=peer), dict(packet=p9, peer=peer),
-              dict(packet=foreign, peer=peer), dict(packet=p11, peer=["127.0.0.2", 49762]),
+              dict(packet=foreign, peer=peer), dict(packet=p11, peer=["127.0.0.2", DISCOVERY_PORT]),
               dict(packet=oldboot, peer=peer), dict(packet=stale, peer=peer), dict(packet=p11, peer=peer)]
     file = put("udp-replay.json", (json.dumps(events, indent=2) + "\n").encode())
     cases.append(dict(name="udp-duplicate-reorder-foreign", kind="udp", file=file, peer=peer, session=session,

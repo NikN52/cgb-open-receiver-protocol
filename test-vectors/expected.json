@@ -585,7 +585,7 @@
         "PCGBO"
       ],
       "discovery_reply": true,
-      "reply_codes": [],
+      "offer_file": "discover-offer.nmea",
       "expected_must_failures": [
         "control_direction",
         "epoch_rate",
@@ -959,7 +959,7 @@
       "file": "udp-replay.json",
       "peer": [
         "127.0.0.1",
-        49762
+        28496
       ],
       "session": "0123456789abcdef",
       "boot": "00000001",
@@ -1004,7 +1004,7 @@
       "file": "udp-rollover.json",
       "peer": [
         "127.0.0.1",
-        49762
+        28496
       ],
       "session": "0123456789abcdef",
       "boot": "00000001",
@@ -1025,7 +1025,7 @@
       "file": "udp-limits-lease.json",
       "peer": [
         "127.0.0.1",
-        49762
+        28496
       ],
       "session": "0123456789abcdef",
       "boot": "00000001",

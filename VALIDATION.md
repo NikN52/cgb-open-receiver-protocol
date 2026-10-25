@@ -3,6 +3,10 @@
 This is evidence for the initial **1.0 DRAFT**, not certification of a device
 or a promise of extended support in the bridge.
 
+The port-migration checks below were rerun on **2026-10-25 (UTC)**. The profile
+uses TCP `28495` for the device stream, UDP `28496` for discovery and
+subscription, and optional UDP `28497` for bridge-side push.
+
 ## ESP32 compilation
 
 PlatformIO, pinned `espressif32@6.9.0`, Arduino framework:
@@ -26,18 +30,66 @@ Python 3.11 standard library:
 - `python tools/run_vectors.py`: **49/49 PASS**. Every stream fixture compares
   both applications' actual input paths, explicit rejection categories and
   the complete expected MUST-failure set. A negative fixture passing means
-  its expected rejection occurred.
+  its expected rejection occurred. Fixtures were regenerated with
+  `python tools/generate_vectors.py`. The discovery case compares the complete
+  generated OFFER, including its checksum and TCP `28495`, and separately
+  verifies an advertised TCP-port override.
 - Two simultaneous 30-second loopback checker runs, baseline and extended:
-  **PASS**, 151 baseline and 150 extended complete, valid GNSS epochs. All observed MUST and
-  SHOULD checks passed; unexercised rules were explicitly SKIP.
+  **PASS**, with the following measured results. All observed MUST and SHOULD
+  checks passed; unexercised rules were explicitly SKIP.
 - Socket smoke check: two simultaneous clients each receive one HELLO; a
   third connection is refused; the client without ACCEPT receives no HB,
-  while an accepted client receives 1 Hz HB.
+  while an accepted client receives two HB in a 2.2-second observation.
+- Bounded shutdown with an active client: baseline and accepted extended
+  connections each received 14 RMC epochs during a three-second run, then
+  clean EOF. Both simulator processes exited 0 with no stderr. Active-client
+  cancellation is handled as normal shutdown.
 
-The PC run used TCP `49161` because the operating system reserved the default
-PC port. The source/firmware device default is still `49761`. Discovery used
-UDP `49762`; the checker proves unicast discovery to a known local IP, not
-broadcast discovery across a real hotspot.
+| Profile | Observation | Complete epochs | Valid-fix epochs | PASS rules | SKIP rules | FAIL rules |
+|---|---:|---:|---:|---:|---:|---:|
+| baseline | 30.093 s | 131 | 131 | 18 | 17 | 0 |
+| extended | 30.016 s | 130 | 130 | 24 | 11 | 0 |
+
+The PC simulator and both checkers used TCP `28495`, with discovery on UDP
+`28496`; no port override was needed. On this run,
+`netsh interface ipv4 show excludedportrange protocol=tcp` did not list TCP
+`28495`, and the simulator successfully bound it. The tools retain `--port`
+for local overrides. The checker proves unicast discovery to a known local
+IP, not broadcast discovery across a real hotspot. UDP `28497` behavior
+remains covered by fixtures rather than a live push test.
+
+All 64 fixture-directory files reproduced byte-for-byte on a second generator
+run. A source scan of all 88 intended public files passed checks for retired
+ports, private local paths, known local job identifiers, private-key/token
+patterns, and the retired Russian multimedia terminology. These pattern
+checks are a scoped source review, not a guarantee against every possible
+disclosure.
+
+## Released bridge baseline TCP
+
+An exclusive test reservation on the shared Android 9 emulator was acquired
+after approximately seven minutes of waiting. The installed release,
+Car GNSS Bridge **0.27.90**
+(`versionCode=171`), was tested without replacing the APK.
+
+- The PC ran `python tools/simulator.py --host 127.0.0.1 --port 28495 --nmea-only`.
+- `adb reverse tcp:28495 tcp:28495` connected the bridge's existing TCP Network
+  receiver at `127.0.0.1:28495` to that simulator.
+- **PASS for TCP ingestion and a parsed raw Fix:** the bridge's system-info
+  screen showed receiver 1 as TCP/NMEA, `FIX`, **8/8 satellites**, and a current
+  observation age of **0.2–0.3 seconds**. A local screenshot,
+  `baseline-tcp28495-fix.png`, records these indicators. Receiver-only mode
+  was selected temporarily for this diagnostic observation.
+- The synthetic constellation also caused application trust warnings. This
+  is raw-input interoperability evidence; trusted navigation under normal
+  filters and delivery to a separate navigator remain unverified.
+- All **six** saved preference files were restored byte-for-byte. The test's
+  reverse mapping was removed, the bridge service was stopped as it had been
+  before the test, and the task's emulator reservation was released. Runtime
+  permissions and app-op settings were not manually changed.
+
+Screenshots, preference backups and raw local logs remain outside this public
+source repository. No real receiver or vehicle was involved.
 
 ## Boundaries
 
@@ -51,8 +103,6 @@ or future pairing/command profile was tested here.
 The released bridge's baseline TCP behavior and the DRAFT extended profile
 are separate. No extended bridge support is claimed by these results.
 
-The requested baseline check with the released bridge in a shared Android
-emulator remains **unverified**: the emulator stayed reserved by another job.
-No emulator receiver preferences or reverse mappings were changed, and no
-Fix screenshot was produced. This application interoperability check is
-outstanding for the publication review.
+The emulator result above covers the released bridge's existing baseline TCP
+input only. It does not demonstrate ORP discovery, ACCEPT/HB negotiation, or
+any extended profile in that application.

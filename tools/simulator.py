@@ -193,7 +193,9 @@ class Simulator:
             done, _ = await asyncio.wait(jobs, return_when=asyncio.FIRST_COMPLETED)
             for job in done:
                 job.result()
-        except (ConnectionError, OSError, asyncio.TimeoutError):
+        except (ConnectionError, OSError, asyncio.TimeoutError, asyncio.CancelledError):
+            # Bounded shutdown cancels active clients; finish their cleanup
+            # normally instead of leaking cancellation to asyncio's callback.
             pass
         finally:
             self.clients.discard(queue)

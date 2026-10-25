@@ -16,9 +16,9 @@ from urllib.parse import unquote_to_bytes
 
 MAX_LINE = 512
 MAX_UBX = 4096
-TCP_PORT = 49761
-DISCOVERY_PORT = 49762
-PUSH_PORT = 49763
+TCP_PORT = 28495
+DISCOVERY_PORT = 28496
+PUSH_PORT = 28497
 CAPS = frozenset("nmea ubx_rx imu_pcgbi wheel batt time udp_push".split())
 RESERVED_CAPS = frozenset(("rtcm_in", "cmd_pair"))
 
@@ -295,8 +295,8 @@ def parse_control(line: Sentence) -> tuple[str, dict[str, str]]:
     for key in ("tcp", "port"):
         if key in fields and not 1 <= uint(fields[key], key, 65535):
             raise ProtocolError("field_values", "port must be 1..65535")
-    if verb == "SUBSCRIBE" and (fields["lease"] != "10" or fields["port"] != "49763"):
-        raise ProtocolError("field_values", "subscription needs port 49763 and lease 10 seconds")
+    if verb == "SUBSCRIBE" and (fields["lease"] != "10" or fields["port"] != str(PUSH_PORT)):
+        raise ProtocolError("field_values", f"subscription needs port {PUSH_PORT} and lease 10 seconds")
     if verb == "STATUS" and fields["level"] not in ("info", "warn", "error"):
         raise ProtocolError("field_values", "invalid status level")
     if "code" in fields and not re.fullmatch(r"[A-Z][A-Z0-9_]{0,47}", fields["code"]):

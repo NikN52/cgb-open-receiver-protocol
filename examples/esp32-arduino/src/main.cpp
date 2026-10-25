@@ -10,8 +10,8 @@
 
 namespace {
 
-constexpr uint16_t kTcpPort = 49761;
-constexpr uint16_t kDiscoveryPort = 49762;
+constexpr uint16_t kTcpPort = OPENRX_TCP_PORT;
+constexpr uint16_t kDiscoveryPort = OPENRX_DISCOVERY_PORT;
 constexpr size_t kMaxLine = 512;  // Excludes CRLF.
 constexpr size_t kMaxEpochBytes = 4096;
 constexpr size_t kMaxEpochLines = 24;

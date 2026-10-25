@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from check_device import StreamAudit
-from protocol import (ImuClock, PushWindow, StreamDecoder, parse_control,
+from protocol import (TCP_PORT, ImuClock, PushWindow, StreamDecoder, parse_control,
                       parse_sentence)
 from simulator import DeviceSession, discovery_reply
 
@@ -79,9 +79,19 @@ def run_stream(case, base):
         reply = discovery_reply(data, "demo01")
         require(reply is not None, case["discovery_reply"], "simulator discovery gate")
         if reply is not None:
-            fields = parse_control(parse_sentence(reply[:-2]))[1]
+            require(reply, (base / case["offer_file"]).read_bytes(), "discovery OFFER fixture")
+            verb, fields = parse_control(parse_sentence(reply[:-2]))
             request = parse_control(parse_sentence(data[:-2]))[1]
+            require(verb, "OFFER", "discovery reply verb")
             require(fields["nonce"], request["nonce"], "discovery nonce echo")
+            require(fields, {"pv": "1.0", "nonce": request["nonce"], "id": "demo01",
+                             "tcp": str(TCP_PORT), "caps": "nmea", "name": "Synthetic-GNSS"},
+                    "discovery OFFER fields")
+            override = discovery_reply(data, "demo01", 28498)
+            require(override is not None, True, "discovery override reply")
+            override_verb, override_fields = parse_control(parse_sentence(override[:-2]))
+            require(override_verb, "OFFER", "discovery override verb")
+            require(override_fields["tcp"], "28498", "discovery override TCP port")
 
 
 def run_imu(case, base):
