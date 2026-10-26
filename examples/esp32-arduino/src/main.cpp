@@ -7,6 +7,7 @@
 #include <lwip/sockets.h>
 
 #include "config.h"
+#include "imu.h"
 
 namespace {
 
@@ -39,6 +40,7 @@ IPAddress activeLocalIp;
 IPAddress activeSubnetMask;
 uint32_t nextWifiAttemptMs = 0;
 bool configurationValid = true;
+openrx::Imu imu;
 
 uint8_t nmeaXor(const char* data, size_t length) {
   uint8_t value = 0;
@@ -521,7 +523,7 @@ struct ClientSlot {
   size_t inputLength = 0;
   bool sawCr = false;
   bool dropping = false;
-  bool accepted = false;
+  openrx::ImuGate imuGate;
   uint32_t heartbeatSeq = 0;
   uint32_t lastHeartbeatMs = 0;
 };
@@ -714,7 +716,7 @@ bool duplicateEarlierKey(const char* fieldsStart, const char* current,
 }
 
 #if OPENRX_ENABLE_PROTOCOL_HELLO
-bool makeHello(char* output, size_t capacity, size_t& length) {
+bool makeHello(char* output, size_t capacity, size_t& length, bool advertiseImu) {
   char body[kMaxLine] = {};
   if (!validDeviceId(OPENRX_DEVICE_ID) ||
       !validEncodedValue(OPENRX_DEVICE_NAME, strlen(OPENRX_DEVICE_NAME), false) ||
@@ -725,9 +727,9 @@ bool makeHello(char* output, size_t capacity, size_t& length) {
   }
   const int count = snprintf(body, sizeof(body),
                              "PCGBO,HELLO,pv=1.0,id=%s,boot=%s,name=%s,maker=%s,fw=%s,"
-                             "caps=nmea,talkers=%s",
+                             "caps=nmea%s,talkers=%s",
                              OPENRX_DEVICE_ID, bootId, OPENRX_DEVICE_NAME, OPENRX_MAKER,
-                             OPENRX_FIRMWARE_VERSION, OPENRX_TALKERS);
+                             OPENRX_FIRMWARE_VERSION, advertiseImu ? "+imu_pcgbi" : "", OPENRX_TALKERS);
   if (count < 0 || static_cast<size_t>(count) >= sizeof(body)) return false;
   length = makeSentence(output, capacity, body);
   return length != 0;
@@ -742,7 +744,8 @@ bool isKnownCapability(const char* value, size_t length) {
   return false;
 }
 
-bool validAccept(const char* line, size_t length) {
+bool validAccept(const char* line, size_t length, bool advertisedImu, bool& selectedImu) {
+  selectedImu = false;
   if (!validNmeaLine(line, length)) return false;
   const char* star = static_cast<const char*>(memchr(line, '*', length));
   if (star == nullptr) return false;
@@ -802,6 +805,9 @@ bool validAccept(const char* line, size_t length) {
         }
         if (decodedEqual(cap, capLength, "nmea", 4)) {
           selectedNmea = true;
+        } else if (decodedEqual(cap, capLength, "imu_pcgbi", 9)) {
+          if (!advertisedImu) return false;
+          selectedImu = true;
         } else if (isKnownCapability(cap, capLength)) {
           return false;  // Known but not advertised by this firmware.
         }
@@ -835,8 +841,10 @@ void processClientInput(ClientSlot& client) {
       continue;
     }
     if (client.sawCr) {
-      if (byte == '\n' && validAccept(client.input, client.inputLength)) {
-        client.accepted = true;
+      bool selectedImu = false;
+      if (byte == '\n' && validAccept(client.input, client.inputLength,
+                                     client.imuGate.advertised, selectedImu)) {
+        client.imuGate.accept(selectedImu);
         client.lastHeartbeatMs = millis();
       }
       client.inputLength = 0;
@@ -881,9 +889,12 @@ void acceptClients() {
 #if OPENRX_ENABLE_PROTOCOL_HELLO
       char hello[kMaxLine + 2] = {};
       size_t helloLength = 0;
-      if (!makeHello(hello, sizeof(hello), helloLength) ||
+      client.imuGate.advertised = imu.present();
+      if (!makeHello(hello, sizeof(hello), helloLength, client.imuGate.advertised) ||
           !sendAtomic(client, reinterpret_cast<const uint8_t*>(hello), helloLength)) {
         closeClient(client);
+      } else {
+        client.imuGate.helloMs = millis();
       }
 #endif
       return;
@@ -894,9 +905,6 @@ void acceptClients() {
 
 void serviceClients() {
   acceptClients();
-#if OPENRX_ENABLE_PROTOCOL_HELLO
-  const uint32_t now = millis();
-#endif
   for (ClientSlot& client : clients) {
     if (!client.socket.connected()) {
       if (client.socket) closeClient(client);
@@ -904,7 +912,8 @@ void serviceClients() {
     }
     processClientInput(client);
 #if OPENRX_ENABLE_PROTOCOL_HELLO
-    if (client.socket.connected() && client.accepted &&
+    const uint32_t now = millis();
+    if (client.socket.connected() && client.imuGate.accepted &&
         static_cast<uint32_t>(now - client.lastHeartbeatMs) >= kHeartbeatIntervalMs) {
       const bool fixFresh = lastEpochHadFix &&
                             static_cast<uint32_t>(now - lastFixEpochMs) <= kFixFreshMs;
@@ -930,6 +939,21 @@ void serviceClients() {
     for (ClientSlot& client : clients) {
       if (client.socket.connected()) {
         sendAtomic(client, reinterpret_cast<const uint8_t*>(epoch.bytes), epoch.length);
+      }
+    }
+  }
+
+  // Each epoch above is one atomic send. PCGBI is submitted only after whole
+  // bundles, so it can never split GGA -> [GST] -> RMC on any connection.
+  openrx::ImuSample sample;
+  if (imu.takeSample(sample)) {
+    char sentence[144] = {};
+    const size_t length = openrx::formatPcgbi(sentence, sizeof(sentence), sample);
+    if (length == 0) return;
+    for (ClientSlot& client : clients) {
+      if (client.socket.connected() &&
+          client.imuGate.allows(imu.present(), OPENRX_ENABLE_PROTOCOL_HELLO != 0, millis())) {
+        sendAtomic(client, reinterpret_cast<const uint8_t*>(sentence), length);
       }
     }
   }
@@ -1002,8 +1026,9 @@ void serviceDiscovery() {
 
   char body[256] = {};
   const int count = snprintf(body, sizeof(body),
-                             "PCGBO,OFFER,pv=1.0,nonce=%s,id=%s,tcp=%u,caps=nmea,name=%s",
-                             nonce, OPENRX_DEVICE_ID, kTcpPort, OPENRX_DEVICE_NAME);
+                             "PCGBO,OFFER,pv=1.0,nonce=%s,id=%s,tcp=%u,caps=nmea%s,name=%s",
+                             nonce, OPENRX_DEVICE_ID, kTcpPort, imu.present() ? "+imu_pcgbi" : "",
+                             OPENRX_DEVICE_NAME);
   char offer[320] = {};
   const size_t offerLength = count > 0 && static_cast<size_t>(count) < sizeof(body)
                                  ? makeSentence(offer, sizeof(offer), body)
@@ -1099,6 +1124,7 @@ void setup() {
   if (!setupGnssRxOnly()) {
     Serial.println("GNSS RX-only UART setup failed");
   }
+  imu.begin();
   configurationValid = validDeviceId(OPENRX_DEVICE_ID) && validMdnsHost(OPENRX_MDNS_HOST) &&
                        validEncodedValue(OPENRX_DEVICE_NAME, strlen(OPENRX_DEVICE_NAME), false) &&
                        validEncodedValue(OPENRX_MAKER, strlen(OPENRX_MAKER), false) &&
@@ -1117,6 +1143,8 @@ void setup() {
 
 void loop() {
   serviceUart();
+  imu.service();
+  serviceUart();  // Drain UART again after the bounded I2C transaction.
   serviceWifi();
   if (servicesRunning) {
     serviceDiscovery();

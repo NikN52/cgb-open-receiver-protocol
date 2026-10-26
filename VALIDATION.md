@@ -7,27 +7,65 @@ The port-migration checks below were rerun on **2026-10-25 (UTC)**. The profile
 uses TCP `28495` for the device stream, UDP `28496` for discovery and
 subscription, and optional UDP `28497` for bridge-side push.
 
+The optional ESP32 IMU changes below were checked on **2026-10-26**. Older
+loopback/emulator results retain their original scope and were not rerun as
+physical IMU tests.
+
 ## ESP32 compilation
 
 PlatformIO, pinned `espressif32@6.9.0`, Arduino framework:
 
 | Environment | Result | RAM | Flash |
 |---|---|---:|---:|
-| `esp32dev` | PASS | 70,832 / 327,680 bytes (21.6%) | 786,365 / 1,310,720 bytes (60.0%) |
-| `esp32-s3-devkitc-1` | PASS | 70,352 / 327,680 bytes (21.5%) | 736,401 / 3,342,336 bytes (22.0%) |
+| `esp32dev` | PASS | 71,420 / 327,680 bytes (21.8%) | 812,885 / 1,310,720 bytes (62.0%) |
+| `esp32-s3-devkitc-1` | PASS | 70,924 / 327,680 bytes (21.6%) | 762,909 / 3,342,336 bytes (22.8%) |
 
 Reproduce from `examples/esp32-arduino` with `pio run`. The source static
-review also passes with `python tests/static_review.py`. No host C++ runtime
-test was performed. The builds and source checks do not demonstrate physical
+review also passes with `python tests/static_review.py`. The actual portable
+firmware primitives are compiled and executed by `python tests/host_review.py`
+using a host C++ compiler with `-std=c++11 -Wall -Wextra -Werror`, and their
+wire output is checked by the Python protocol decoder. The builds and source
+checks do not demonstrate physical
 UART pin state, board compatibility, sustained Wi-Fi throughput or GNSS RF
 performance. Generated build caches, configured credentials, binaries and raw
 local logs are not part of this public source repository.
+
+## Optional IMU checklist
+
+- [x] Both board environments build with the default `OPENRX_ENABLE_IMU=1`,
+  `OPENRX_ENABLE_PROTOCOL_HELLO=1`; `-Wall`, `-Wextra`, and
+  `-Werror=return-type` remain enabled. No compiler warnings were emitted.
+- [x] Additional `esp32dev` builds pass without warnings for IMU enabled with
+  HELLO disabled, and for both IMU and HELLO disabled.
+- [x] Static review covers public defaults (SDA/SCL 21/22 and 8/9), Wire-only
+  optional compilation, WHO/burst selection, bounded I2C timeout, configuration
+  readback, invalid-map handling, 2-second boot window, five-error/30-second
+  retry paths, and PCGBI placement after complete epoch sends.
+- [x] Host C++ checks cover MPU big-endian and LSM little-endian conversion,
+  24 proper signed rotations, invalid maps, raw sensor rails, finite values,
+  gyro/acceleration limits, decimal rounding and exact checksums/field order.
+- [x] Host C++ checks cover stationary versus changing/moving boot observations,
+  separate connection gates, the 5-second legacy timeout, permanent late-ACCEPT
+  stop, pure streams, and `uint32` timer rollover. These are portable-primitives
+  tests; I2C state-machine failures are source-reviewed, not runtime-injected.
+- [x] The seven-field 50 Hz fixture covers timestamp rollover, duplicate `ms`,
+  and a gap greater than one second; existing two-field fixtures are retained.
+  All 65 fixture-directory files reproduce byte-for-byte after regeneration.
+- [x] All 16 new/changed public files pass a source scan for local private
+  paths, MAC addresses and private-key/token markers; Wi-Fi placeholders remain.
+- [x] English/Russian negotiation and section 10.1 describe the same legacy
+  exception and plain-stream option; example wiring/mounting/calibration/rate
+  instructions explain the absence of absolute north.
+- [ ] Physical I2C identification, voltage/pin routing, sensor filter behavior,
+  axis/yaw signs, real stillness calibration and failure/reconnect timing.
+- [ ] Sustained UART/Wi-Fi/IMU delivery and heading use in an actual vehicle or
+  the released bridge. No such hardware/vehicle result is claimed here.
 
 ## Python and wire fixtures
 
 Python 3.11 standard library:
 
-- `python tools/run_vectors.py`: **49/49 PASS**. Every stream fixture compares
+- `python tools/run_vectors.py`: **50/50 PASS** (2026-10-26). Every stream fixture compares
   both applications' actual input paths, explicit rejection categories and
   the complete expected MUST-failure set. A negative fixture passing means
   its expected rejection occurred. Fixtures were regenerated with
@@ -58,8 +96,8 @@ for local overrides. The checker proves unicast discovery to a known local
 IP, not broadcast discovery across a real hotspot. UDP `28497` behavior
 remains covered by fixtures rather than a live push test.
 
-All 64 fixture-directory files reproduced byte-for-byte on a second generator
-run. A source scan of all 88 intended public files passed checks for retired
+On 2026-10-25, all 64 fixture-directory files reproduced byte-for-byte on a
+second generator run. A source scan of all 88 then-intended public files passed checks for retired
 ports, private local paths, known local job identifiers, private-key/token
 patterns, and the retired Russian multimedia terminology. These pattern
 checks are a scoped source review, not a guarantee against every possible

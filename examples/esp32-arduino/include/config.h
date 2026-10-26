@@ -52,11 +52,38 @@
 #endif
 
 // Disabling HELLO also disables ACCEPT parsing and heartbeat output, leaving a
-// pure NMEA-only TCP stream.
+// plain TCP stream (NMEA plus optional proprietary PCGBI).
 #ifndef OPENRX_ENABLE_PROTOCOL_HELLO
 #define OPENRX_ENABLE_PROTOCOL_HELLO 1
 #endif
 #ifndef OPENRX_ENABLE_MDNS
 #define OPENRX_ENABLE_MDNS 1
+#endif
+
+// Optional Wire-only I2C IMU. Missing hardware leaves GNSS forwarding active.
+#ifndef OPENRX_ENABLE_IMU
+#define OPENRX_ENABLE_IMU 1
+#endif
+#ifndef OPENRX_IMU_SDA_PIN
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#define OPENRX_IMU_SDA_PIN 8
+#else
+#define OPENRX_IMU_SDA_PIN 21
+#endif
+#endif
+#ifndef OPENRX_IMU_SCL_PIN
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#define OPENRX_IMU_SCL_PIN 9
+#else
+#define OPENRX_IMU_SCL_PIN 22
+#endif
+#endif
+#ifndef OPENRX_IMU_RATE_HZ
+#define OPENRX_IMU_RATE_HZ 50
+#endif
+// Vehicle X (forward), Y (left), Z (up), in terms of signed sensor axes.
+// Each sensor axis must occur once; the map must preserve handedness.
+#ifndef OPENRX_IMU_AXIS_MAP
+#define OPENRX_IMU_AXIS_MAP "+X+Y+Z"
 #endif
 

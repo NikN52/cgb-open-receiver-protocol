@@ -844,6 +844,43 @@
       ]
     },
     {
+      "name": "imu-full-50hz-edge",
+      "kind": "imu",
+      "file": "imu-full-50hz-edge.nmea",
+      "names": [
+        "PCGBI",
+        "PCGBI",
+        "PCGBI",
+        "PCGBI",
+        "PCGBI",
+        "PCGBI",
+        "PCGBI"
+      ],
+      "arrival_ms": [
+        0,
+        20,
+        40,
+        41,
+        60,
+        1080,
+        1100
+      ],
+      "states": [
+        "boundary",
+        "step",
+        "step",
+        "duplicate",
+        "step",
+        "boundary",
+        "step"
+      ],
+      "expected_must_failures": [
+        "epoch_rate",
+        "fresh_epochs",
+        "mandatory_rmc_gga"
+      ]
+    },
+    {
       "name": "ubx-dollar",
       "kind": "stream",
       "file": "ubx-dollar.bin",

@@ -137,6 +137,8 @@ $PCGBO,ACCEPT,pv=1.0,use=nmea*38
 
 The bridge MUST select only capabilities both advertised by the device and supported by the bridge. Advertising a capability in `HELLO` does not activate it. `rtcm_in` and `cmd_pair` must not be advertised or selected in 1.0.
 
+One legacy exception applies only to `imu_pcgbi`. If the device sends `HELLO`, a device with an available IMU MAY begin sending proprietary `$PCGBI` lines only after 5 seconds have elapsed without receiving a valid `ACCEPT`. A deliberately configured plain stream that omits `HELLO` entirely (for example, `OPENRX_ENABLE_PROTOCOL_HELLO=0`) MAY send `$PCGBI` immediately when an IMU is available; no 5-second timer applies when no `HELLO` was sent. Any valid `ACCEPT` ends either fallback for the connection. From that point the device MUST send only selected capabilities; if `use` omits `imu_pcgbi`, the device MUST stop `$PCGBI` and MUST NOT resume it on that connection. These exceptions do not activate any other capability or otherwise change negotiation. A receiver that does not support `$PCGBI` ignores those proprietary lines.
+
 ### 7.3 HB, STATUS, and ERROR
 
 ```text
@@ -168,6 +170,8 @@ $PCGBO,ERROR,code=BAD_CHECKSUM*24
 | `cmd_pair` | **RESERVED** | MUST NOT be advertised or accepted in 1.0 |
 
 UBX is permitted only after `ubx_rx` is selected. The receiver reconstructs complete UBX frames using their own length and checksum; `$` inside a payload does not start an ASCII line. A UBX-only profile is not defined: `nmea` remains mandatory.
+
+The optional status of `imu_pcgbi` includes only the two legacy `$PCGBI` fallbacks defined in sections 7.2 and 10.1. All other optional capabilities require selection by `ACCEPT` before use.
 
 ## 9. NMEA navigation data
 
@@ -221,6 +225,8 @@ $PCGBI,<ms>,<gz>,<gx>,<gy>,<ax>,<ay>,<az>*HH\r\n
 | `gx`,`gy`,`gz` | degrees/s, each `-500…+500` | with Z up, positive `gz` is counter-clockwise |
 | `ax`,`ay`,`az` | m/s² including gravity; vector norm `≤50` | at rest with Z up, `az≈+9.81` is expected |
 
+The vehicle frame is right-handed: X forward, Y left, Z up.
+
 Examples:
 
 ```text
@@ -229,6 +235,8 @@ $PCGBI,123456,12.5,0.1,-0.2,0.00,0.00,9.81*5C
 ```
 
 10–100 samples/s are allowed; 50 is recommended. A repeated `ms` is discarded. A backwards move of half the `uint32` range or more is treated as a reboot; a gap over 1000 ms in `ms` or arrival time starts a new integration segment. Vehicle heading additionally uses a 2 rad/s (about 114.6°/s) vertical-rate limit; a faster valid sample may remain diagnostic but does not affect heading. A gyroscope alone cannot provide absolute north.
+
+Normally, `$PCGBI` is sent only when `imu_pcgbi` was selected by `ACCEPT`. For compatibility with receivers that parse proprietary NMEA without ORP negotiation, a device with an available IMU MAY begin sending `$PCGBI` only after 5 seconds without a valid `ACCEPT` if it sent `HELLO`. A deliberately configured plain stream that omits `HELLO` entirely (for example, `OPENRX_ENABLE_PROTOCOL_HELLO=0`) MAY send `$PCGBI` immediately when an IMU is available; no 5-second timer applies without `HELLO`. A receiver that does not support `$PCGBI` ignores it. After any valid `ACCEPT`, the device MUST send only selected capabilities; an `ACCEPT` that omits `imu_pcgbi` permanently stops `$PCGBI` for that connection. No other capability gains a pre-`ACCEPT` fallback.
 
 ### 10.2 WHEEL
 
@@ -336,7 +344,7 @@ The complete datagram is at most **1200 bytes**. Source IP, `session`, and `boot
 
 This specification defines a wire protocol; it does not promise every extension in a particular build.
 
-**Available now:** Car GNSS Bridge 0.27.90 accepts ordinary NMEA TCP through the existing “TCP Network” receiver: Settings → Receiver → Receivers… → TCP Network, then enter the device IP and port `28495`. ORP discovery, HELLO/ACCEPT, and extensions are not required in this mode.
+**Available now:** Car GNSS Bridge 0.27.x accepts ordinary NMEA TCP and parses `$PCGBI` from that plain TCP stream through the existing “TCP Network” receiver: Settings → Receiver → Receivers… → TCP Network, then enter the device IP and port `28495`. This is legacy plain-stream compatibility; ORP discovery and HELLO/ACCEPT negotiation are not implemented by that receiver.
 
 **DRAFT / soon:** a dedicated “Open Protocol” receiver and negotiated extensions are under discussion. An implementation must consume PCGBO as control data, keep separate indicators for “channel alive,” “GNSS epoch received,” and “new Fix received,” and never treat HB or STATUS as navigation freshness. IMU, WHEEL, and BATT remain separate sensor/diagnostic data until their application is validated independently.
 

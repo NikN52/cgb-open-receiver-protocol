@@ -131,6 +131,12 @@ def main():
                       arrival_ms=[0, 20, 21, 40, 60, 80, 2100],
                       states=["boundary", "step", "duplicate", "step", "boundary", "step", "boundary"]))
     stream("imu-full-form", b"$PCGBI,123456,12.5,0.1,-0.2,0.00,0.00,9.81*5C\r\n", ["PCGBI"], must_pass=["imu"])
+    full_samples = [4294967276, 0, 20, 20, 40, 1060, 1080]
+    file = put("imu-full-50hz-edge.nmea", b"".join(
+        sentence(f"PCGBI,{ms},1.00,0.10,-0.20,0.00,0.00,9.81") for ms in full_samples))
+    cases.append(dict(name="imu-full-50hz-edge", kind="imu", file=file, names=["PCGBI"] * 7,
+                      arrival_ms=[0, 20, 40, 41, 60, 1080, 1100],
+                      states=["boundary", "step", "step", "duplicate", "step", "boundary", "step"]))
 
     def ubx(payload, bad=False):
         inner = bytes([1, 7]) + len(payload).to_bytes(2, "little") + payload
@@ -223,6 +229,7 @@ def main():
         "imu-intermediate": no_valid | {"imu"}, "imu-gyro-range": no_valid | {"imu"},
         "imu-accel-range": no_valid | {"imu"},
         "imu-rollover-reboot": no_gnss, "imu-full-form": no_gnss,
+        "imu-full-50hz-edge": no_gnss,
         "ubx-dollar": one_epoch, "ubx-bad-checksum": one_epoch | {"binary_frames"},
         "ubx-max4096": one_epoch, "ubx-over4096": one_epoch | {"binary_frames"},
         "bare-lf": {"framing", "mandatory_rmc_gga", "epoch_match", "epoch_rate"},
