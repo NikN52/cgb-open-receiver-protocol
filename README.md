@@ -11,7 +11,7 @@
 | Возможность | Статус |
 |---|---|
 | Обычный NMEA по TCP | работает в Car GNSS Bridge 0.27.90 через существующий тип «Сеть TCP» |
-| ESP32 UART → Wi-Fi, `caps=nmea` | публичный пример |
+| ESP32 UART → Wi-Fi, `caps=nmea`, необязательный гироскоп I2C (`$PCGBI`, `imu_pcgbi`) | публичный пример |
 | HELLO/ACCEPT/HB, discovery, UDP push, дополнительные capabilities | DRAFT для обсуждения и совместимых реализаций |
 | RTCM-ввод и команды | RESERVED, запрещены в 1.0 |
 
@@ -19,7 +19,7 @@
 
 ## Быстрый старт: работает сейчас
 
-1. Подключите любой одноантенный NMEA-приёмник к RX-only UART платы ESP32 (или аналогичной UART–Wi-Fi платы) и выберите совпадающую скорость `9600`, `38400` либо `115200` бод. Двухантенный приёмник не требуется. Плата подключается как Wi-Fi STA к hotspot телефона или мультимедиа автомобиля, то есть оказывается в одной локальной сети с мостом. Устройство должно слушать TCP `28495` и передавать checksum-valid NMEA с `GGA` и `RMC`; рекомендуется `GGA → GST → RMC`, 5 Гц.
+1. Подключите любой одноантенный NMEA-приёмник к RX-only UART платы ESP32 (или аналогичной UART–Wi-Fi платы) и выберите совпадающую скорость `9600`, `38400` либо `115200` бод. Двухантенный приёмник не требуется. Плата подключается как Wi-Fi STA к hotspot телефона или мультимедиа автомобиля, то есть оказывается в одной локальной сети с мостом. Устройство должно слушать TCP `28495` и передавать checksum-valid NMEA с `GGA` и `RMC`; рекомендуется `GGA → GST → RMC`, 5 Гц. Необязательно: подключите к той же плате гироскоп/акселерометр I2C (MPU-6050/6500/9250 или LSM6DS3/DSL/DSO, питание 3,3 В) — пример найдёт его сам и будет передавать `$PCGBI` 50 Гц, мост 0.27.x разбирает эти строки из «Сеть TCP»; схема, установка и калибровка — в [описании примера](examples/esp32-arduino/README.md#optional-i2c-imu).
 2. В Car GNSS Bridge 0.27.90 откройте «Настройки» → «Приёмник» → «Приёмники…» → «Сеть TCP».
 3. Укажите IP устройства и порт `28495`. Для этого режима HELLO, discovery и ACCEPT не нужны.
 4. Проверьте продвигающийся UTC, Fix, число спутников, высоту и отсутствие повторов сохранённой точки. При отсутствии решения должны идти RMC `V` и GGA quality `0`.
@@ -54,7 +54,7 @@ $PCGBO,HB,boot=1a2b3c4d,seq=18,ms=18000,fix=0*67
 
 ## Пример и инструменты
 
-- [ESP32 Arduino / PlatformIO](examples/esp32-arduino/) — RX-only UART, Wi-Fi STA, два TCP-клиента, discovery и необязательный mDNS; capability только `nmea`.
+- [ESP32 Arduino / PlatformIO](examples/esp32-arduino/) — RX-only UART, Wi-Fi STA, два TCP-клиента, discovery, необязательный mDNS и **необязательный гироскоп/акселерометр I2C** (MPU-6050/6500/9250, LSM6DS3/DSL/DSO: автоопределение, оси под машину, калибровка нуля при старте) — строки `$PCGBI` 50 Гц; capabilities `nmea` и, когда IMU найден, `imu_pcgbi`.
 - [Независимые wire-примитивы на Python](tools/protocol.py) — стандартная библиотека, checksum/framing, control/PCGBI и UDP validation для тестов.
 - [Синтетический локальный приёмник](tools/simulator.py) и [ограниченная 30-секундная проверка устройства](tools/check_device.py). PASS означает только наблюдение в этом запуске; SKIP не является доказательством.
 - [Генератор синтетических векторов](tools/generate_vectors.py) и [их воспроизведение](tools/run_vectors.py); инструменты не записывают реальный маршрут.
@@ -96,7 +96,7 @@ Specification **1.0 DRAFT** is proposed for discussion. Its wire format can alre
 | Feature | Status |
 |---|---|
 | Ordinary NMEA over TCP | works in Car GNSS Bridge 0.27.90 through the existing “TCP Network” receiver |
-| ESP32 UART → Wi-Fi, `caps=nmea` | public example |
+| ESP32 UART → Wi-Fi, `caps=nmea`, optional I2C gyroscope (`$PCGBI`, `imu_pcgbi`) | public example |
 | HELLO/ACCEPT/HB, discovery, UDP push, supplemental capabilities | DRAFT for discussion and interoperable implementations |
 | RTCM input and commands | RESERVED and forbidden in 1.0 |
 
@@ -104,7 +104,7 @@ A software check or example build proves only laboratory code behavior. It does 
 
 ## Quick start: available now
 
-1. Connect any single-antenna NMEA receiver to the RX-only UART of an ESP32 (or a similar UART-to-Wi-Fi board) and select the matching `9600`, `38400`, or `115200` baud rate. No dual-antenna receiver is required. Join the board as a Wi-Fi station to either the phone hotspot or the head-unit hotspot, placing it on the same local network as the bridge. The device listens on TCP `28495` and sends checksum-valid NMEA with `GGA` and `RMC`; `GGA → GST → RMC` at 5 Hz is recommended.
+1. Connect any single-antenna NMEA receiver to the RX-only UART of an ESP32 (or a similar UART-to-Wi-Fi board) and select the matching `9600`, `38400`, or `115200` baud rate. No dual-antenna receiver is required. Join the board as a Wi-Fi station to either the phone hotspot or the head-unit hotspot, placing it on the same local network as the bridge. The device listens on TCP `28495` and sends checksum-valid NMEA with `GGA` and `RMC`; `GGA → GST → RMC` at 5 Hz is recommended. Optionally, connect an I2C gyroscope/accelerometer (MPU-6050/6500/9250 or LSM6DS3/DSL/DSO, 3.3 V) to the same board: the example detects it automatically and sends `$PCGBI` at 50 Hz, which bridge 0.27.x parses from the TCP Network receiver; see the [example README](examples/esp32-arduino/README.md#optional-i2c-imu) for wiring, mounting, and calibration.
 2. In Car GNSS Bridge 0.27.90, open Settings → Receiver → Receivers… → TCP Network.
 3. Enter the device IP and port `28495`. This mode does not require HELLO, discovery, or ACCEPT.
 4. Verify advancing UTC, Fix, satellite count, altitude, and no replay of a stored position. No solution must be represented by RMC `V` and GGA quality `0`.
@@ -139,7 +139,7 @@ Full requirements, ports, states, limits, UDP discovery/push, BLE/SPP, PCGBI, UB
 
 ## Example and tools
 
-- [ESP32 Arduino / PlatformIO](examples/esp32-arduino/) — RX-only UART, Wi-Fi STA, two TCP clients, discovery, and optional mDNS; `nmea` only.
+- [ESP32 Arduino / PlatformIO](examples/esp32-arduino/) — RX-only UART, Wi-Fi STA, two TCP clients, discovery, optional mDNS, and an **optional I2C gyroscope/accelerometer** (MPU-6050/6500/9250, LSM6DS3/DSL/DSO: auto-detection, vehicle axis map, boot zero calibration) sending `$PCGBI` at 50 Hz; capabilities `nmea` and, when an IMU is found, `imu_pcgbi`.
 - [Independent Python wire primitives](tools/protocol.py) — standard-library checksum/framing, control/PCGBI, and UDP validation helpers for tests.
 - [Synthetic local receiver](tools/simulator.py) and [bounded 30-second device check](tools/check_device.py). PASS means only an observation in that run; SKIP is not evidence.
 - [Synthetic vector generator](tools/generate_vectors.py) and [vector replay](tools/run_vectors.py); the tools do not record a real route.
